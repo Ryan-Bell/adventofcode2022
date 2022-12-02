@@ -8,6 +8,17 @@ enum Outcome {
     Win = 6,
 }
 
+impl From<&str> for Outcome {
+    fn from(outcome_char: &str) -> Self {
+        match outcome_char {
+            "X" => Outcome::Lost,
+            "Y" => Outcome::Draw,
+            "Z" => Outcome::Win,
+            _ => panic!("Could not convert to Outcome: {}", outcome_char),
+        }
+    }
+}
+
 #[derive(Clone, Copy)]
 enum Move {
     Rock = 1,
@@ -18,11 +29,27 @@ enum Move {
 impl From<&str> for Move {
     fn from(move_char: &str) -> Self {
         match move_char {
-            "A" | "X" => Move::Rock,
-            "B" | "Y" => Move::Paper,
-            "C" | "Z" => Move::Scissors,
+            "A" => Move::Rock,
+            "B" => Move::Paper,
+            "C" => Move::Scissors,
             _ => panic!("Could not convert to Move: {}", move_char),
         }
+    }
+}
+
+fn get_move_for_outcome(opponent: Move, outcome: Outcome) -> Move {
+    use crate::Move::*;
+    use crate::Outcome::*;
+    match (opponent, outcome) {
+        (Rock, Win) => Paper,
+        (Rock, Draw) => Rock,
+        (Rock, Lost) => Scissors,
+        (Paper, Win) => Scissors,
+        (Paper, Draw) => Paper,
+        (Paper, Lost) => Rock,
+        (Scissors, Win) => Rock,
+        (Scissors, Draw) => Scissors,
+        (Scissors, Lost) => Paper,
     }
 }
 
@@ -48,7 +75,11 @@ fn score(ours: Move, opponent: Move) -> i32 {
 fn score_line(line: String) -> i32 {
     let mut split = line.split_whitespace();
     let opponent: Move = split.next().expect("Could not read opponent move").into();
-    let ours: Move = split.next().expect("Could not read our move").into();
+    let outcome: Outcome = split
+        .next()
+        .expect("Could not read the expected outcome")
+        .into();
+    let ours: Move = get_move_for_outcome(opponent, outcome);
     score(ours, opponent)
 }
 
