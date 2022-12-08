@@ -58,15 +58,13 @@ fn score(ours: Move, opponent: Move) -> i32 {
     use crate::Outcome::*;
 
     let outcome = match (ours, opponent) {
-        (Rock, Rock) => Draw,
         (Rock, Paper) => Lost,
         (Rock, Scissors) => Win,
         (Paper, Rock) => Win,
-        (Paper, Paper) => Draw,
         (Paper, Scissors) => Lost,
         (Scissors, Rock) => Lost,
         (Scissors, Paper) => Win,
-        (Scissors, Scissors) => Draw,
+        (_, _) => Draw,
     };
 
     ours as i32 + outcome as i32

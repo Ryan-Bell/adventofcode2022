@@ -1,3 +1,5 @@
+#![feature(iter_next_chunk)]
+
 use std::collections::HashSet;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -15,16 +17,21 @@ fn item_priority(item: char) -> u32 {
 fn main() {
     let mut summed_priorities = 0;
     let file = File::open("./input.txt").expect("Could not open input file");
-    for raw_line in io::BufReader::new(file).lines() {
-        let mut first_half = raw_line.unwrap();
-        let second_half = first_half.split_off(first_half.len() / 2);
+    let mut lines = io::BufReader::new(file).lines().peekable();
 
-        let first_set: HashSet<char> = HashSet::from_iter(first_half.chars());
-        let second_set: HashSet<char> = HashSet::from_iter(second_half.chars());
+    while Option::is_some(&lines.peek()) {
+        let [ruck1, ruck2, ruck3] = lines.next_chunk().unwrap();
+        let ruck_set_1: HashSet<char> = HashSet::from_iter(ruck1.unwrap().chars());
+        let ruck_set_2: HashSet<char> = HashSet::from_iter(ruck2.unwrap().chars());
+        let ruck_set_3: HashSet<char> = HashSet::from_iter(ruck3.unwrap().chars());
 
-        let mut intersect = first_set.intersection(&second_set);
-        let item = intersect.next().unwrap();
-        summed_priorities += item_priority(*item);
+        let intersection = ruck_set_1
+            .iter()
+            .filter(|e| ruck_set_2.contains(e) && ruck_set_3.contains(e))
+            .next()
+            .expect("Could not find common element in group");
+
+        summed_priorities += item_priority(*intersection);
     }
     println!("{}", summed_priorities);
 }
