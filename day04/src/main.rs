@@ -23,14 +23,20 @@ impl Range {
         }
     }
 
-    fn overlaps(&self, other: Range) -> bool {
+    fn fully_overlaps(&self, other: Range) -> bool {
         other.lower <= self.lower && other.upper >= self.upper
             || self.lower <= other.lower && self.upper >= other.upper
+    }
+
+    fn partially_overlaps(&self, other: Range) -> bool {
+        (other.lower <= self.upper && other.lower >= self.lower)
+            || (other.upper >= self.lower && other.upper <= self.upper)
+            || (other.upper >= self.upper && other.lower <= self.lower)
     }
 }
 
 fn main() {
-    let mut full_overlaps = 0;
+    let mut partial_overlaps = 0;
     let file = File::open("./input.txt").expect("Could not open the input file");
     for raw_line in io::BufReader::new(file).lines() {
         let line = raw_line.unwrap();
@@ -46,11 +52,11 @@ fn main() {
         let range1 = Range::new(first_elf_work.to_string());
         let range2 = Range::new(second_elf_work.to_string());
 
-        if range1.overlaps(range2) {
-            full_overlaps += 1;
+        if range1.partially_overlaps(range2) {
+            partial_overlaps += 1;
         }
     }
-    println!("{}", full_overlaps);
+    println!("{}", partial_overlaps);
 }
 
 #[cfg(test)]
@@ -65,13 +71,36 @@ mod tests {
     }
 
     #[test]
-    fn test_range_overlap() {
+    fn test_range_full_overlap() {
         let range1 = Range::new("2-5".to_string());
         let range2 = Range::new("3-4".to_string());
-        assert_eq!(range1.overlaps(range2), true);
+        assert_eq!(range1.fully_overlaps(range2), true);
 
         let range3 = Range::new("2-5".to_string());
         let range4 = Range::new("6-6".to_string());
-        assert_eq!(range3.overlaps(range4), false);
+        assert_eq!(range3.fully_overlaps(range4), false);
+    }
+
+    #[test]
+    fn test_range_partial_overlap() {
+        let range1 = Range::new("2-4".to_string());
+        let range2 = Range::new("4-7".to_string());
+        assert_eq!(range1.partially_overlaps(range2), true);
+
+        let range3 = Range::new("2-4".to_string());
+        let range4 = Range::new("5-7".to_string());
+        assert_eq!(range3.partially_overlaps(range4), false);
+
+        let range5 = Range::new("2-4".to_string());
+        let range6 = Range::new("3-3".to_string());
+        assert_eq!(range5.partially_overlaps(range6), true);
+
+        let range7 = Range::new("4-7".to_string());
+        let range8 = Range::new("2-4".to_string());
+        assert_eq!(range7.partially_overlaps(range8), true);
+
+        let range9 = Range::new("3-3".to_string());
+        let range10 = Range::new("2-4".to_string());
+        assert_eq!(range9.partially_overlaps(range10), true);
     }
 }
